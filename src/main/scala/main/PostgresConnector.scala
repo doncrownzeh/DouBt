@@ -1,38 +1,22 @@
 package main
 
-
-import main.Config.DatabaseConfig
 import cats.effect._
-import doobie.util.transactor.Transactor
-
-import doobie._
-import doobie.implicits.toSqlInterpolator
-import doobie.syntax.SqlInterpolator.SingleFragment
+import doobie.Transactor
 import doobie.implicits._
+import main.Config.DatabaseConfig
 
-
-class PostgresConnector(configs:List[DatabaseConfig]) {
+class PostgresConnector(configs: List[DatabaseConfig]) {
   val config = configs.last
   val xa = Transactor.fromDriverManager[IO](
     driver = "org.postgresql.Driver",
     url = s"jdbc:postgresql://${config.host}:${config.port}/",
     user = config.username,
-    pass = config.password
-//    , logHandler = None
+    password = config.password,
+    logHandler = None
   )
-  val schema = config.schema
-
-//  case class Schema(value: String)
-
-//  implicit val schemaGet: Get[Schema] = Get[String].map(fromString)
-//  implicit val schemaPut: Put[Schema] = Put[String].contramap(toString2)
-
-//  def fromString(s: String) = {Schema.apply(s)}
-//  def toString2(schema: Schema) = schema.value
 
   def getTables: IO[List[String]] = {
-    val x =
-      fr"""
+    sql"""
          select * FROM (
  select * from (
     select
@@ -81,14 +65,7 @@ class PostgresConnector(configs:List[DatabaseConfig]) {
                 and nsp.nspname = ccu.constraint_schema
             )
     ) as foo
-order by table_name asc, column_name)"""
-
-
-    val costam = new SingleFragment[String](fr"public")
-
-    val y =
-      fr"where table_schema='${costam}'"
-    val z = x ++ y
-    z.query[String].to[List].transact(xa)
+order by table_name asc, column_name)
+where table_schema = ${config.schema}""".query[String].to[List].transact(xa)
   }
 }
