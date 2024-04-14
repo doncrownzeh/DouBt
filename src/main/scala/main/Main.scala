@@ -1,4 +1,4 @@
-package Main
+package main
 
 import cats.effect.kernel.Resource
 import cats.effect.{IO, IOApp}
@@ -16,10 +16,9 @@ object Main extends IOApp.Simple {
   private val configPath = "main.conf"
 
   private def loadConfig: IO[Config.Config] = {
-    def sourceIO: IO[Source] = IO(Source.fromResource(configPath))
     def closeFile(source: Source): IO[Unit] = IO(source.close())
     def readLines(source: Source): IO[String] = IO(source.getLines().mkString("\n"))
-    Resource.make(sourceIO)(src => closeFile(src)).use(readLines).map{ stringConfig =>
+    Resource.make(IO(Source.fromResource(configPath)))(closeFile).use(readLines).map { stringConfig =>
       val result = ConfigSource.string(stringConfig).load[Config.Config]
 
       result match {
@@ -34,7 +33,10 @@ object Main extends IOApp.Simple {
   override def run: IO[Unit] = {
     for {
       config <- loadConfig
-    } yield println(config)
+      postgresConnector = new PostgresConnector(config.databaseConfigs)
+      result <- postgresConnector.getTables
+
+    } yield println(result)
   }
 
 }
