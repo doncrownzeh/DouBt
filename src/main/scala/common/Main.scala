@@ -1,7 +1,8 @@
-package main
+package common
 
 import cats.effect.kernel.Resource
 import cats.effect.{IO, IOApp}
+import postgres.PostgresConnector
 import pureconfig._
 import pureconfig.generic.ProductHint
 import pureconfig.generic.auto._
@@ -35,8 +36,7 @@ object Main extends IOApp.Simple {
     for {
       config <- loadConfig
       postgresConnector = new PostgresConnector(config.databaseConfigs)
-      result <- postgresConnector.getTables
-
+      result <- postgresConnector.connections.last.getConstraints
     } yield println(result)
   }
 

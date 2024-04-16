@@ -1,21 +1,18 @@
-package main
+package postgres
 
-import cats.effect._
-import doobie.Transactor
+import cats.effect.IO
+import common.Config.Schema
+import common.interface.DatabaseConnection
+import doobie.util.transactor.Transactor.Aux
 import doobie.implicits._
-import main.Config.DatabaseConfig
 
-class PostgresConnector(configs: List[DatabaseConfig]) {
-  val config = configs.last
-  val xa = Transactor.fromDriverManager[IO](
-    driver = "org.postgresql.Driver",
-    url = s"jdbc:postgresql://${config.host}:${config.port}/",
-    user = config.username,
-    password = config.password,
-    logHandler = None
-  )
+case class PostgresConnection(transactor: Aux[IO, Unit], schema: Schema) extends DatabaseConnection {
 
-  def getTables: IO[List[String]] = {
+  override def getTables: IO[List[String]] = ???
+
+  override def getColumns: IO[List[String]] = ???
+
+  override def getConstraints: IO[List[String]] = {
     sql"""
          select * FROM (
  select * from (
@@ -66,6 +63,8 @@ class PostgresConnector(configs: List[DatabaseConfig]) {
             )
     ) as foo
 order by table_name asc, column_name)
-where table_schema = ${config.schema}""".query[String].to[List].transact(xa)
+where table_schema = ${schema}""".query[String].to[List].transact(transactor)
   }
+
+  override def getIndices: IO[List[String]] = ???
 }
