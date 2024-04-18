@@ -13,7 +13,7 @@ object Main extends IOApp.Simple {
 
   implicit def hint[A]: ProductHint[A] = ProductHint[A](ConfigFieldMapping(CamelCase, KebabCase))
 
-  private val configPath = "main.conf"
+  private val configPath = "common/main.conf"
 
   private def loadConfig: IO[Config.Config] = {
     def closeFile(source: Source): IO[Unit] = IO(source.close())
@@ -36,7 +36,7 @@ object Main extends IOApp.Simple {
     for {
       config <- loadConfig
       postgresConnector = new PostgresConnector(config.databaseConfigs)
-      result <- postgresConnector.connections.last.getConstraints
+      result <- postgresConnector.connections.last.getTables
     } yield println(result)
   }
 

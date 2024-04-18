@@ -8,7 +8,7 @@ class PostgresConnector(configs: List[DatabaseConfig]) {
   lazy val connections: List[PostgresConnection] = configs.map { config =>
     val transactor = Transactor.fromDriverManager[IO](
       driver = "org.postgresql.Driver",
-      url = s"jdbc:postgresql://${config.host}:${config.port}/",
+      url = s"jdbc:postgresql://${config.host}:${config.port}/${config.database}",
       user = config.username,
       password = config.password,
       logHandler = None

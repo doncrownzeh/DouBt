@@ -8,7 +8,7 @@ import doobie.implicits._
 
 case class PostgresConnection(transactor: Aux[IO, Unit], schema: Schema) extends DatabaseConnection {
 
-  override def getTables: IO[List[String]] = ???
+  override def getTables: IO[List[String]] = sql"""select table_name from information_schema."tables"""".query[String].to[List].transact(transactor)
 
   override def getColumns: IO[List[String]] = ???
 
