@@ -1,5 +1,6 @@
 package common
 
+import cats.data.EitherT
 import cats.effect.kernel.Resource
 import cats.effect.{IO, IOApp}
 import postgres.PostgresConnector
@@ -28,16 +29,15 @@ object Main extends IOApp.Simple {
         case _ => throw new IllegalStateException("invalid config")
       }
     }
-
   }
 
-
   override def run: IO[Unit] = {
-    for {
-      config <- loadConfig
+    (for {
+      config <- EitherT.right[String](loadConfig)
       postgresConnector = new PostgresConnector(config.databaseConfigs)
-      result <- postgresConnector.connections.last.getTables
-    } yield println(result)
+      _ <- EitherT(postgresConnector.connections)
+    } yield println("[SUCCESS]")).leftMap(err => System.err.println(err)).merge
+
   }
 
 }

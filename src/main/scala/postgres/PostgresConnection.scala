@@ -1,12 +1,15 @@
 package postgres
 
 import cats.effect.IO
-import common.Config.Schema
+import common.Config.DatabaseConfig
 import common.interface.DatabaseConnection
 import doobie.util.transactor.Transactor.Aux
 import doobie.implicits._
 
-case class PostgresConnection(transactor: Aux[IO, Unit], schema: Schema) extends DatabaseConnection {
+case class PostgresConnection(transactor: Aux[IO, Unit], databaseConfig: DatabaseConfig) extends DatabaseConnection {
+
+  // TODO move to trait?
+  def description = s"${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}"
 
   override def getTables: IO[List[String]] = sql"""select table_name from information_schema."tables"""".query[String].to[List].transact(transactor)
 
@@ -63,7 +66,7 @@ case class PostgresConnection(transactor: Aux[IO, Unit], schema: Schema) extends
             )
     ) as foo
 order by table_name asc, column_name)
-where table_schema = ${schema}""".query[String].to[List].transact(transactor)
+where table_schema = ${databaseConfig.schema}""".query[String].to[List].transact(transactor)
   }
 
   override def getIndices: IO[List[String]] = ???
