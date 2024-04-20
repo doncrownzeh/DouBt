@@ -6,11 +6,11 @@ object Config {
 
   case class DatabaseConfig(host: String, port: String, username: String, password: String, database: Database, schema: Schema)
 
-  class Database(val value: String) extends AnyVal {
+  case class Database(value: String) extends AnyVal {
     override def toString: String = value
   }
 
-  class Schema(val value: String) extends AnyVal {
+  case class Schema(value: String) extends AnyVal {
     override def toString: String = value
   }
 
