@@ -4,6 +4,8 @@ import cats.effect.IO
 
 // TODO correct types
 trait DatabaseConnection {
+  def description: String
+
   def getTables: IO[List[String]]
 
   def getColumns: IO[List[String]]

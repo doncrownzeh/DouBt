@@ -8,8 +8,8 @@ import doobie.implicits._
 
 case class PostgresConnection(transactor: Aux[IO, Unit], databaseConfig: DatabaseConfig) extends DatabaseConnection {
 
-  // TODO move to trait?
-  def description = s"${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}"
+
+  override def description = s"${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}"
 
   override def getTables: IO[List[String]] = sql"""select table_name from information_schema."tables"""".query[String].to[List].transact(transactor)
 
