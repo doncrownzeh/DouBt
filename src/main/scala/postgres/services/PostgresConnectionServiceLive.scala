@@ -1,18 +1,21 @@
-package postgres
+package postgres.services
 
 import cats.effect._
-import common.Config._
-import doobie.Transactor
-import doobie.implicits._
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
+import common.Config._
+import common.interface.DatabaseConnection
+import doobie.Transactor
+import doobie.implicits._
+import postgres.domain.PostgresConnection
 
 
-class PostgresConnector(configs: List[DatabaseConfig]) extends LazyLogging {
-  def connections: IO[Either[String, List[PostgresConnection]]] =
-    configs.map(createConnectionFromConfig)
-      .traverse(testConnection)
-      .map(handleCheckedConnections)
+class PostgresConnectionServiceLive(configs: List[DatabaseConfig]) extends LazyLogging with PostgresConnectionService {
+
+
+  override def connections: IO[Either[String, List[DatabaseConnection]]] = configs.map(createConnectionFromConfig)
+    .traverse(testConnection)
+    .map(handleCheckedConnections)
 
   private def createConnectionFromConfig(config: DatabaseConfig) = {
     val url = s"jdbc:postgresql://${config.host}:${config.port}/${config.database}"
@@ -47,5 +50,6 @@ class PostgresConnector(configs: List[DatabaseConfig]) extends LazyLogging {
     if (invalid.isEmpty) valid.asRight
     else invalid.mkString("\n").asLeft
   }
+
 }
   

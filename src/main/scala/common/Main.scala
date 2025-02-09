@@ -3,7 +3,9 @@ package common
 import cats.data.EitherT
 import cats.effect.kernel.Resource
 import cats.effect.{IO, IOApp}
-import postgres.PostgresConnector
+import common.interface.DatabaseConnection
+import common.model.TablesValidationResult
+import postgres.services.{PostgresConnectionServiceLive, PostgresValidationService}
 import pureconfig._
 import pureconfig.generic.ProductHint
 import pureconfig.generic.auto._
@@ -34,9 +36,11 @@ object Main extends IOApp.Simple {
   override def run: IO[Unit] = {
     (for {
       config <- EitherT.right[String](loadConfig)
-      postgresConnector = new PostgresConnector(config.databaseConfigs)
-      _ <- EitherT(postgresConnector.connections)
-    } yield println("[SUCCESS]")).leftMap(err => System.err.println(err)).merge
+      postgresConnector = new PostgresConnectionServiceLive(config.databaseConfigs)
+      postgresValidator = new PostgresValidationService()(postgresConnector)
+      _ <- EitherT[IO, String, List[DatabaseConnection]](postgresConnector.connections)
+      validationResult <- EitherT[IO, String, TablesValidationResult](postgresValidator.validateTableNames())
+    } yield println(validationResult)).leftMap(err => System.err.println(err)).merge
 
   }
 

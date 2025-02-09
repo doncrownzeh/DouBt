@@ -1,10 +1,10 @@
-package postgres
+package postgres.domain
 
 import cats.effect.IO
 import common.Config.DatabaseConfig
 import common.interface.DatabaseConnection
-import doobie.util.transactor.Transactor.Aux
 import doobie.implicits._
+import doobie.util.transactor.Transactor.Aux
 
 case class PostgresConnection(transactor: Aux[IO, Unit], databaseConfig: DatabaseConfig) extends DatabaseConnection {
 
